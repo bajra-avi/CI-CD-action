@@ -1,17 +1,56 @@
-name: Run Cypress Test
-on: [push]
+# name: Run Cypress Test
+# on: [push]
+# jobs:
+#   install:
+#    runs-on: ubuntu-latest
+#    steps:
+#     - name: Checkout
+#       uses: actions/checkout@v2
+#     - name: Install modules
+#       uses: npi ci
+#     - name: Cypress run
+#       uses: cypress-io/github-action@v3
+#       with:
+#         browser: chrome
+#         headless: true
+#         start: npm run dev
+#         wait-on: http://localhost:5173
+name: Run Cypress Tests
+
+on:
+  push: # Trigger on pushes to any branch
+
 jobs:
-  install:
-   runs-on: ubuntu-latest
-   steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Install modules
-      uses: npi ci
-    - name: Cypress run
-      uses: cypress-io/github-action@v3
-      with:
-        browser: chrome
-        headless: true
-        start: npm run dev
-        wait-on: http://localhost:5173
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Cypress run
+        uses: cypress-io/github-action@v6 # Utilize the official Cypress action
+        with:
+          browser: chrome # Adjust browser as needed
+          headless: true  # Run tests in headless mode
+
+      - name: Upload test results (Optional)
+        uses: actions/upload-artifact@v3 # Upload test results for later analysis (Optional)
+        with:
+          name: cypress-test-results
+          path: cypress/results
+
